@@ -77,6 +77,15 @@ jobs:
         with:
           args: ${{ matrix.args }}
 
+      # Windows has no installer target (see src-tauri/tauri.windows.conf.json),
+      # so `tauri build` leaves a plain, portable binary in target/release
+      # instead of an NSIS/MSI bundle. Rename it so the artifact name doesn't
+      # collide with the other platforms' bundle outputs.
+      - name: Name the portable Windows build
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: Copy-Item src-tauri/target/release/mind-map.exe src-tauri/target/release/mind-map-portable.exe
+
       - uses: actions/upload-artifact@v4
         with:
           name: mind-map-${{ matrix.label }}
@@ -84,6 +93,6 @@ jobs:
             src-tauri/target/release/bundle/**/*.AppImage
             src-tauri/target/release/bundle/**/*.deb
             src-tauri/target/release/bundle/**/*.dmg
-            src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/release/mind-map-portable.exe
             src-tauri/target/**/release/bundle/**/*.dmg
           if-no-files-found: warn
