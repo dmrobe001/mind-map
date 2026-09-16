@@ -1,0 +1,402 @@
+{
+  "version": 1,
+  "id": "doc_7b430da6e3ebea95",
+  "title": "Getting started",
+  "nodes": {
+    "n_7f990d6829e0ab73": {
+      "id": "n_7f990d6829e0ab73",
+      "title": "This map",
+      "summary": "Drag me. Double-click the background to add a node.",
+      "content": [
+        {
+          "id": "b_f42ea1cef78e2b66",
+          "type": "markdown",
+          "value": "Everything here is an ordinary node. Delete it all when you are done reading.\n\n- **Link two nodes** by dragging the dot on a card's right edge onto another card.\n- **Add a child** with `Tab` while a node is selected.\n- **Find anything** with `Ctrl`+`K`.",
+          "label": ""
+        }
+      ],
+      "tags": [
+        "reference"
+      ],
+      "status": null,
+      "x": 0,
+      "y": 0,
+      "fields": {},
+      "color": null,
+      "created": "2026-09-16T00:45:05.210Z",
+      "updated": "2026-09-16T00:45:05.210Z"
+    },
+    "n_f6ecba70e813c709": {
+      "id": "n_f6ecba70e813c709",
+      "title": "Quick capture",
+      "summary": "Ctrl+K, type a name, Shift+Enter.",
+      "content": [
+        {
+          "id": "b_51694479b5e30eb5",
+          "type": "markdown",
+          "value": "If the quick switcher finds nothing, Enter creates a node with what you typed.\n\nA thought you cannot file in five seconds is a thought you will not file.",
+          "label": ""
+        }
+      ],
+      "tags": [],
+      "status": null,
+      "x": -300,
+      "y": 160,
+      "fields": {},
+      "color": null,
+      "created": "2026-09-16T00:45:05.210Z",
+      "updated": "2026-09-16T00:45:05.210Z"
+    },
+    "n_3b3cabf0e2215023": {
+      "id": "n_3b3cabf0e2215023",
+      "title": "Filtering",
+      "summary": "Labels, status, focus, and compound queries.",
+      "content": [
+        {
+          "id": "b_b317c4afa61a592e",
+          "type": "markdown",
+          "value": "Label chips cycle **neutral → require → exclude**, so hiding everything tagged\n`work` is two clicks.\n\nFocus does the relationship filters: everything within N links of a node,\neverything under it, everything above it, or its whole cluster.\n\nThe Query section stacks conditions with AND/OR and a per-row NOT, and drops\nto raw JSON when you need nesting.",
+          "label": ""
+        }
+      ],
+      "tags": [
+        "reference"
+      ],
+      "status": null,
+      "x": 0,
+      "y": 200,
+      "fields": {},
+      "color": null,
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "n_94bb49b6cfce967a": {
+      "id": "n_94bb49b6cfce967a",
+      "title": "Labels are yours",
+      "summary": "work / personal are just two examples.",
+      "content": [],
+      "tags": [
+        "work",
+        "personal"
+      ],
+      "status": null,
+      "x": -260,
+      "y": 380,
+      "fields": {},
+      "color": null,
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "n_9583b48bd13a4fee": {
+      "id": "n_9583b48bd13a4fee",
+      "title": "Relationship filters",
+      "summary": "Select a node, then \"use selected\" under Focus.",
+      "content": [],
+      "tags": [
+        "reference"
+      ],
+      "status": null,
+      "x": 250,
+      "y": 380,
+      "fields": {},
+      "color": null,
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "n_a3eb6baacbd263d1": {
+      "id": "n_a3eb6baacbd263d1",
+      "title": "Try marking this done",
+      "summary": "Press t, or click the dot on the card.",
+      "content": [],
+      "tags": [],
+      "status": "todo",
+      "x": 330,
+      "y": 170,
+      "fields": {},
+      "color": null,
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "n_1836c17b2069236b": {
+      "id": "n_1836c17b2069236b",
+      "title": "Node contents",
+      "summary": "Markdown, links, code, file paths, LaTeX.",
+      "content": [
+        {
+          "id": "b_5a86af6a8a453eb6",
+          "type": "markdown",
+          "value": "Blocks stack up inside a node.\n\n> Anything the app does not recognise is kept as-is on save.",
+          "label": "notes"
+        },
+        {
+          "id": "b_50fa90623977d6c6",
+          "type": "link",
+          "value": "https://example.com",
+          "label": "somewhere useful"
+        },
+        {
+          "id": "b_d27605da49e901a9",
+          "type": "file",
+          "value": "/home/you/notes/reading-list.md",
+          "label": "a file on disk"
+        }
+      ],
+      "tags": [
+        "reference"
+      ],
+      "status": null,
+      "x": 320,
+      "y": -140,
+      "fields": {},
+      "color": null,
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "n_92d170e7ee1ae67a": {
+      "id": "n_92d170e7ee1ae67a",
+      "title": "Structured fields",
+      "summary": "Arbitrary key/value data, queryable.",
+      "content": [],
+      "tags": [],
+      "status": null,
+      "x": 40,
+      "y": -200,
+      "fields": {
+        "source": "manual",
+        "priority": "2"
+      },
+      "color": null,
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "n_e8c4239fd62fad68": {
+      "id": "n_e8c4239fd62fad68",
+      "title": "It is a graph, not a tree",
+      "summary": "Draw a second line whenever something gains a new meaning.",
+      "content": [
+        {
+          "id": "b_0d9984c5f687ec94",
+          "type": "markdown",
+          "value": "Nothing has to move to gain a new association. Add the edge and keep both.",
+          "label": ""
+        }
+      ],
+      "tags": [],
+      "status": null,
+      "x": -330,
+      "y": -110,
+      "fields": {},
+      "color": null,
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    }
+  },
+  "edges": {
+    "e_dfcded006c5ca73f": {
+      "id": "e_dfcded006c5ca73f",
+      "from": "n_7f990d6829e0ab73",
+      "to": "n_f6ecba70e813c709",
+      "type": "child",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "e_4bc2315e74933b2e": {
+      "id": "e_4bc2315e74933b2e",
+      "from": "n_7f990d6829e0ab73",
+      "to": "n_3b3cabf0e2215023",
+      "type": "child",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "e_895f64df7d6ffd76": {
+      "id": "e_895f64df7d6ffd76",
+      "from": "n_7f990d6829e0ab73",
+      "to": "n_1836c17b2069236b",
+      "type": "child",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "e_db513b92d21ddc92": {
+      "id": "e_db513b92d21ddc92",
+      "from": "n_7f990d6829e0ab73",
+      "to": "n_e8c4239fd62fad68",
+      "type": "child",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "e_6c0395fffcfe99c9": {
+      "id": "e_6c0395fffcfe99c9",
+      "from": "n_3b3cabf0e2215023",
+      "to": "n_94bb49b6cfce967a",
+      "type": "child",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "e_334eff6984cf0bc0": {
+      "id": "e_334eff6984cf0bc0",
+      "from": "n_3b3cabf0e2215023",
+      "to": "n_9583b48bd13a4fee",
+      "type": "child",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "e_c5baf5076c19df9f": {
+      "id": "e_c5baf5076c19df9f",
+      "from": "n_1836c17b2069236b",
+      "to": "n_92d170e7ee1ae67a",
+      "type": "child",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "e_acd553ec4d1ab30e": {
+      "id": "e_acd553ec4d1ab30e",
+      "from": "n_f6ecba70e813c709",
+      "to": "n_a3eb6baacbd263d1",
+      "type": "child",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "e_219e0e6ae3b6598f": {
+      "id": "e_219e0e6ae3b6598f",
+      "from": "n_e8c4239fd62fad68",
+      "to": "n_3b3cabf0e2215023",
+      "type": "relates",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    },
+    "e_133e595305c3cf1f": {
+      "id": "e_133e595305c3cf1f",
+      "from": "n_92d170e7ee1ae67a",
+      "to": "n_3b3cabf0e2215023",
+      "type": "references",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T00:45:05.211Z",
+      "updated": "2026-09-16T00:45:05.211Z"
+    }
+  },
+  "tagTypes": {
+    "work": {
+      "id": "work",
+      "label": "work",
+      "color": "#5b8def",
+      "description": ""
+    },
+    "personal": {
+      "id": "personal",
+      "label": "personal",
+      "color": "#4aa96c",
+      "description": ""
+    },
+    "reference": {
+      "id": "reference",
+      "label": "reference",
+      "color": "#b07cd6",
+      "description": ""
+    }
+  },
+  "edgeTypes": {
+    "child": {
+      "id": "child",
+      "label": "child",
+      "directed": true,
+      "hierarchical": true,
+      "color": "#5b8def",
+      "description": "A → B means B sits under A."
+    },
+    "relates": {
+      "id": "relates",
+      "label": "relates to",
+      "directed": false,
+      "hierarchical": false,
+      "color": "#8a8f98",
+      "description": "A symmetric association with no direction implied."
+    },
+    "references": {
+      "id": "references",
+      "label": "references",
+      "directed": true,
+      "hierarchical": false,
+      "color": "#b07cd6",
+      "description": "A → B means A points at B, e.g. a note citing a source."
+    }
+  },
+  "statusTypes": {
+    "todo": {
+      "id": "todo",
+      "label": "To-do",
+      "color": "#e0a33e",
+      "done": false,
+      "order": 1
+    },
+    "done": {
+      "id": "done",
+      "label": "Done",
+      "color": "#4aa96c",
+      "done": true,
+      "order": 2
+    }
+  },
+  "views": [
+    {
+      "id": "v_open",
+      "name": "Open to-dos",
+      "filter": {
+        "quick": {
+          "include": [],
+          "exclude": [],
+          "status": "todo"
+        },
+        "advanced": null,
+        "search": ""
+      }
+    },
+    {
+      "id": "v_nowork",
+      "name": "No work stuff",
+      "filter": {
+        "quick": {
+          "include": [],
+          "exclude": [
+            "work"
+          ],
+          "status": "all"
+        },
+        "advanced": null,
+        "search": ""
+      }
+    }
+  ],
+  "meta": {
+    "created": "2026-09-16T00:45:05.205Z",
+    "updated": "2026-09-16T00:45:05.205Z"
+  }
+}

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mind-map</title>
+<link rel="stylesheet" href="src/styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='6' fill='%235b8def'/><circle cx='5' cy='6' r='3' fill='%234aa96c'/><circle cx='27' cy='7' r='3' fill='%23e0a33e'/><circle cx='26' cy='26' r='3' fill='%23b07cd6'/></svg>">
+</head>
+<body>
+  <header id="toolbar"></header>
+
+  <main id="workspace">
+    <aside id="left-panel" class="panel"></aside>
+    <div id="canvas"></div>
+    <aside id="right-panel" class="panel"></aside>
+  </main>
+
+  <footer id="status-bar"></footer>
+
+  <dialog id="help-dialog">
+    <h2>Keyboard and mouse</h2>
+    <div class="help-columns">
+      <section>
+        <h3>Canvas</h3>
+        <dl>
+          <dt>double-click background</dt><dd>new node here</dd>
+          <dt>drag background</dt><dd>pan</dd>
+          <dt>shift + drag background</dt><dd>select a region</dd>
+          <dt>wheel</dt><dd>zoom at the pointer</dd>
+          <dt>shift + wheel</dt><dd>pan sideways</dd>
+          <dt>drag the dot on a card</dt><dd>link to another card</dd>
+          <dt>double-click a title</dt><dd>rename in place</dd>
+        </dl>
+      </section>
+      <section>
+        <h3>Keys</h3>
+        <dl>
+          <dt>n</dt><dd>new node at the centre</dd>
+          <dt>Tab</dt><dd>new child of the selected node</dd>
+          <dt>Shift + Enter</dt><dd>new sibling</dd>
+          <dt>Enter</dt><dd>rename the selected node</dd>
+          <dt>l</dt><dd>start a link from the selection</dd>
+          <dt>t</dt><dd>cycle to-do → done → none</dd>
+          <dt>e</dt><dd>focus the filter on the selection</dd>
+          <dt>f</dt><dd>frame everything visible</dd>
+          <dt>arrows</dt><dd>nudge the selection, or pan</dd>
+          <dt>Delete</dt><dd>delete the selection</dd>
+          <dt>Ctrl + K</dt><dd>jump to a node, or create one</dd>
+          <dt>Ctrl + A</dt><dd>select everything shown</dd>
+          <dt>Ctrl + Z / Ctrl + Shift + Z</dt><dd>undo / redo</dd>
+          <dt>Ctrl + S</dt><dd>save to the open file</dd>
+          <dt>0 / + / −</dt><dd>reset / zoom in / zoom out</dd>
+        </dl>
+      </section>
+    </div>
+    <form method="dialog"><button class="tool primary">Close</button></form>
+  </dialog>
+
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
