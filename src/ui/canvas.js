@@ -78,6 +78,22 @@ export class Canvas extends EventTarget {
     const { x, y, zoom } = this.camera;
     this.viewport.style.transform = `translate(${x}px, ${y}px) scale(${zoom})`;
     this.root.style.setProperty('--zoom', String(zoom));
+    this._markTransforming();
+  }
+
+  /**
+   * Flags the viewport as actively transforming so the compositor promotes
+   * it to a GPU layer for smooth panning/zooming, then drops the flag once
+   * the camera settles so it re-rasterizes node cards crisply at rest. See
+   * the `.viewport.is-transforming` comment in styles.css for why this needs
+   * to be transient rather than permanent.
+   */
+  _markTransforming() {
+    this.viewport.classList.add('is-transforming');
+    clearTimeout(this._transformSettleTimer);
+    this._transformSettleTimer = setTimeout(() => {
+      this.viewport.classList.remove('is-transforming');
+    }, 200);
   }
 
   screenToWorld(clientX, clientY) {

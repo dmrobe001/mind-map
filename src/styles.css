@@ -344,6 +344,16 @@ select.full, input.full, .search-input { width: 100%; }
   position: absolute;
   inset: 0;
   transform-origin: 0 0;
+}
+
+/*
+ * will-change is applied only while the camera is actively moving. Left on
+ * permanently, Chromium/WebView2 keeps the viewport on a cached compositor
+ * layer and just GPU-scales that bitmap instead of re-rastering it, so node
+ * cards go soft at normal zoom and pixelate further in. Removing the hint
+ * once the transform settles lets it re-rasterize crisply at the new scale.
+ */
+.viewport.is-transforming {
   will-change: transform;
 }
 
