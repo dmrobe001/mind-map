@@ -16,6 +16,7 @@ import { serializeDocument, normalizeDocument } from './model.js';
 
 const AUTOSAVE_KEY = 'mindmap:autosave:v1';
 const VIEWSTATE_KEY = 'mindmap:viewstate:v1';
+const SETTINGS_KEY = 'mindmap:device:v1';
 const IDB_NAME = 'mindmap';
 const IDB_STORE = 'handles';
 
@@ -79,6 +80,28 @@ export function loadViewState() {
   } catch {
     return null;
   }
+}
+
+/**
+ * Per-machine settings, in the browser's copy of them.
+ *
+ * The native build keeps the same shape in a config file instead. Either way
+ * this never enters the document: where this machine keeps the cloud drive is
+ * not a fact about your notes, and syncing it would break every other machine.
+ */
+export function loadDeviceSettings() {
+  try {
+    const raw = safeLocalStorage()?.getItem(SETTINGS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+export function saveDeviceSettings(settings) {
+  try {
+    safeLocalStorage()?.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  } catch { /* settings are a convenience */ }
 }
 
 /* ------------------------------------------------------------------ *

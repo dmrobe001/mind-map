@@ -14,6 +14,12 @@ build/
 .cache/
 *.tsbuildinfo
 
+# ---- Rust / Tauri ----
+src-tauri/target/
+src-tauri/gen/
+# Staged copy of the web app, rebuilt by scripts/stage-frontend.mjs.
+src-tauri/frontend/
+
 # ---- Logs ----
 *.log
 npm-debug.log*

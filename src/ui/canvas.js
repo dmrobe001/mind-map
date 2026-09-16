@@ -13,7 +13,7 @@
  */
 
 import { runCommand } from '../core/commands.js';
-import { firstLine } from '../content/markdown.js';
+import { rendererFor } from '../content/renderers.js';
 
 const NODE_WIDTH = 190;
 const CLICK_SLOP = 4;
@@ -251,7 +251,8 @@ export class Canvas extends EventTarget {
     const hint = element.querySelector('.node-content-hint');
     if (node.content?.length) {
       const first = node.content[0];
-      hint.textContent = `${node.content.length} block${node.content.length > 1 ? 's' : ''} · ${firstLine(first.value, 40) || first.type}`;
+      const preview = rendererFor(first.type).preview?.(first) ?? first.type;
+      hint.textContent = `${node.content.length} block${node.content.length > 1 ? 's' : ''} · ${preview || first.type}`;
       hint.classList.remove('hidden');
     } else {
       hint.classList.add('hidden');

@@ -59,6 +59,14 @@ export const DEFAULT_EDGE_TYPES = {
   },
 };
 
+export const DEFAULT_ROOTS = {
+  sync: {
+    id: 'sync',
+    label: 'Cloud drive',
+    hint: 'The folder you sync between machines — Dropbox, OneDrive, Drive, Syncthing.',
+  },
+};
+
 export const DEFAULT_STATUS_TYPES = {
   todo: { id: 'todo', label: 'To-do', color: '#e0a33e', done: false, order: 1 },
   done: { id: 'done', label: 'Done', color: '#4aa96c', done: true, order: 2 },
@@ -99,12 +107,24 @@ export function createNode(props = {}) {
 }
 
 export function createBlock(props = {}) {
+  const meta = { ...(props.meta ?? {}) };
+  // A file block's meta is its locator set, so give it the full shape up front
+  // rather than making every reader guard for a missing key.
+  if ((props.type ?? 'markdown') === 'file') {
+    meta.root = meta.root ?? 'absolute';
+    meta.alternates = (meta.alternates ?? []).map((alternate) => ({
+      root: alternate.root ?? 'absolute',
+      path: alternate.path ?? '',
+      device: alternate.device ?? null,
+      deviceName: alternate.deviceName ?? null,
+    }));
+  }
   return {
     id: props.id || uid('b'),
     type: props.type ?? 'markdown',
     value: props.value ?? '',
     label: props.label ?? '',
-    ...(props.meta ? { meta: { ...props.meta } } : {}),
+    meta,
   };
 }
 
@@ -144,6 +164,12 @@ export function createDocument(props = {}) {
     tagTypes: props.tagTypes ?? {},
     edgeTypes: props.edgeTypes ?? structuredClone(DEFAULT_EDGE_TYPES),
     statusTypes: props.statusTypes ?? structuredClone(DEFAULT_STATUS_TYPES),
+    /**
+     * Named locations that file references can be relative to, e.g. a cloud
+     * drive folder. Only the *names* live here — each machine maps them to a
+     * real path in its own settings, which is what makes a reference portable.
+     */
+    roots: props.roots ?? structuredClone(DEFAULT_ROOTS),
     /** Saved filter/focus combinations, e.g. "no work stuff". */
     views: props.views ?? [],
     meta: { created: ts, ...(props.meta ?? {}), updated: ts },
@@ -198,6 +224,7 @@ export function normalizeDocument(raw) {
     tagTypes: {},
     edgeTypes: { ...structuredClone(DEFAULT_EDGE_TYPES), ...(migrated.edgeTypes ?? {}) },
     statusTypes: { ...structuredClone(DEFAULT_STATUS_TYPES), ...(migrated.statusTypes ?? {}) },
+    roots: { ...structuredClone(DEFAULT_ROOTS), ...(migrated.roots ?? {}) },
     views: Array.isArray(migrated.views) ? migrated.views : [],
     meta: migrated.meta ?? {},
   });

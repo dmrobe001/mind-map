@@ -11,6 +11,7 @@
 
 import { contentRenderers } from '../core/registry.js';
 import { renderMarkdown, escapeHtml, firstLine } from './markdown.js';
+import { locatorsFor, resolveLocator, describeLocator, basename } from '../core/locators.js';
 
 const el = (tag, className, html) => {
   const node = document.createElement(tag);
@@ -59,27 +60,87 @@ contentRenderers.register('link', {
 contentRenderers.register('file', {
   label: 'File reference',
   order: 4,
-  editor: 'line',
-  placeholder: '/home/you/projects/notes.txt',
-  hint: 'A path to a file on this machine. Browsers will not open it from a web '
-    + 'page, but recording it here means "every note that mentions this file" is '
-    + 'a text search away.',
-  render: (block) => {
+  editor: 'locators',
+  placeholder: '/home/you/projects/notes.md',
+  hint: 'One file, in as many places as it lives. A location relative to a named '
+    + 'root resolves on every machine that has mapped that root; an absolute one '
+    + 'only works where it was recorded.',
+  render: (block, ctx = {}) => {
     const wrap = el('div', 'block-body file');
-    const path = el('code', 'file-path');
-    path.textContent = block.value || '(no path)';
-    const copy = el('button', 'mini');
-    copy.type = 'button';
-    copy.textContent = 'copy path';
-    copy.addEventListener('click', () => {
-      navigator.clipboard?.writeText(block.value ?? '');
-      copy.textContent = 'copied';
-      setTimeout(() => { copy.textContent = 'copy path'; }, 1200);
-    });
-    wrap.append(path, copy);
+    const locators = locatorsFor(block).filter((locator) => locator.path);
+
+    if (!locators.length) {
+      wrap.append(el('div', 'block-note', 'No location recorded yet.'));
+      return wrap;
+    }
+
+    const platform = ctx.platform;
+    for (const [index, locator] of locators.entries()) {
+      const path = resolveLocator(locator, ctx);
+      // null = unmapped root, false = mapped but not here, true = present.
+      const present = path ? (ctx.exists?.(path) ?? null) : null;
+
+      const row = el('div', `locator ${index === 0 ? 'is-primary' : ''}`);
+      const dot = el('span', 'locator-dot');
+      dot.dataset.state = present === true ? 'here' : present === false ? 'elsewhere' : 'unknown';
+      dot.title = present === true
+        ? 'On this machine'
+        : present === false
+          ? 'Not on this machine'
+          : path
+            ? 'Not checked — this build cannot see the filesystem'
+            : `No path configured for the "${locator.root}" root on this machine`;
+
+      const text = el('code', 'file-path');
+      text.textContent = describeLocator(locator, ctx.doc);
+      text.title = path ?? '(unresolved)';
+
+      // Buttons live in their own group so the path gets a full line to wrap
+      // in rather than being squeezed into whatever the buttons leave over.
+      const actions = el('div', 'locator-actions');
+      row.append(dot, text, actions);
+
+      if (present === true && platform?.can.openExternally) {
+        const open = el('button', 'mini');
+        open.type = 'button';
+        open.textContent = 'open';
+        open.addEventListener('click', () => {
+          platform.openPath(path).catch((err) => { text.textContent = err.message; });
+        });
+        actions.append(open);
+
+        if (platform.can.revealInFolder) {
+          const reveal = el('button', 'mini');
+          reveal.type = 'button';
+          reveal.textContent = 'show';
+          reveal.title = 'Show in the file manager';
+          reveal.addEventListener('click', () => { platform.revealPath(path).catch(() => {}); });
+          actions.append(reveal);
+        }
+      }
+
+      const copy = el('button', 'mini');
+      copy.type = 'button';
+      copy.textContent = 'copy';
+      copy.title = 'Copy the resolved path';
+      copy.addEventListener('click', () => {
+        navigator.clipboard?.writeText(path ?? locator.path);
+        copy.textContent = 'copied';
+        setTimeout(() => { copy.textContent = 'copy'; }, 1200);
+      });
+      actions.append(copy);
+
+      wrap.append(row);
+    }
+
+    if (!platform?.can.realPaths) {
+      wrap.append(el('div', 'block-note',
+        'Paths are recorded but cannot be opened here — a browser tab has no filesystem. '
+        + 'The desktop build opens them.'));
+    }
     return wrap;
   },
-  preview: (block) => block.value?.split('/').pop() ?? '',
+  preview: (block) => basename(block.value) || block.label,
 });
 
 contentRenderers.register('code', {

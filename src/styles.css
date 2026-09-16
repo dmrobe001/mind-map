@@ -550,7 +550,12 @@ select.full, input.full, .search-input { width: 100%; }
 }
 .block-body a { color: var(--accent); }
 .block-body.file { display: flex; align-items: center; gap: 6px; }
-.file-path { flex: 1; font-size: 11px; word-break: break-all; }
+.file-path {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  line-height: 1.5;
+}
 .block-note { color: var(--fg-faint); font-size: 10px; margin-top: 4px; }
 .block-body.render-error { color: var(--danger); }
 .latex-source { text-align: center; }
@@ -580,6 +585,87 @@ kbd {
   border-radius: 3px;
   padding: 1px 4px;
 }
+
+/* ---- file locators ---- */
+
+.block-body.file { display: block; }
+
+.locator {
+  /* Dot in its own column; the path and its buttons stack underneath in the
+     remaining width, so a long path wraps at word boundaries instead of being
+     squeezed to three characters a line. */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 3px 6px;
+  padding: 4px 0;
+}
+.locator .file-path { grid-column: 2; }
+.locator-actions { grid-column: 2; display: flex; flex-wrap: wrap; gap: 4px; }
+.locator + .locator { border-top: 1px solid var(--border); }
+
+/* The dot is the whole status language: present, elsewhere, or unknown. */
+.locator-dot {
+  width: 8px;
+  height: 8px;
+  margin-top: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--fg-faint);
+}
+.locator-dot[data-state="here"] { background: #4aa96c; }
+.locator-dot[data-state="elsewhere"] { background: var(--danger); }
+.locator-dot[data-state="unknown"] {
+  background: transparent;
+  border: 1px solid var(--fg-faint);
+}
+
+.locator-editor { padding: 6px 8px; }
+.locator-edit + .locator-edit { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border); }
+.locator-edit-head { display: flex; align-items: center; gap: 5px; margin-bottom: 4px; }
+.locator-edit-head > select { flex: 1; min-width: 0; }
+.locator-edit .block-input { border: 1px solid var(--border); border-radius: var(--radius); }
+.locator-badge {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--fg-faint);
+}
+.locator-device {
+  font-size: 10px;
+  color: var(--fg-muted);
+  background: var(--bg-raised);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+.hint.mono { font-family: var(--mono); word-break: break-all; }
+
+/* ---- roots dialog ---- */
+
+#roots-dialog {
+  background: var(--bg-panel);
+  color: var(--fg);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  max-width: 620px;
+  width: min(620px, 92vw);
+}
+#roots-dialog::backdrop { background: rgb(0 0 0 / .5); }
+#roots-dialog h2 { margin: 0 0 8px; font-size: 16px; }
+.dialog-intro { color: var(--fg-muted); font-size: 12px; margin: 0 0 16px; line-height: 1.55; }
+.dialog-body { display: flex; flex-direction: column; gap: 14px; }
+#roots-dialog form { margin-top: 18px; text-align: right; }
+#roots-dialog .inline-form { margin-top: 0; text-align: left; }
+
+.root-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+  background: var(--bg-raised);
+}
+.root-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.root-row .field-row > input { font-family: var(--mono); font-size: 11px; }
 
 /* ---------------------------------------------------------------- *
  * Status bar

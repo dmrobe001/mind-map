@@ -23,6 +23,7 @@
  */
 
 import { filterOps } from './registry.js';
+import { locatorsFor } from './locators.js';
 
 export const MATCH_ALL = { op: 'all' };
 
@@ -225,6 +226,30 @@ filterOps.register('field', {
     return (node) => cmp(node.fields?.[spec.key], spec.value);
   },
   describe: (spec) => `${spec.key} ${spec.cmp ?? 'eq'} ${spec.value ?? ''}`.trim(),
+});
+
+/**
+ * "Show me every note that touches this file."
+ *
+ * Matches against every locator on every file block, not just the primary and
+ * not just the ones that resolve here, so a search finds the note whether or
+ * not the file happens to exist on the machine you are sitting at.
+ */
+filterOps.register('filePath', {
+  label: 'references a file',
+  category: 'attribute',
+  order: 45,
+  fields: [{ key: 'query', type: 'text', label: 'path contains' }],
+  build: (spec) => {
+    const needle = String(spec.query ?? '').toLowerCase().replace(/\\/g, '/');
+    return (node) => (node.content ?? []).some((block) => {
+      if (block.type !== 'file') return false;
+      const paths = locatorsFor(block).map((l) => l.path).filter(Boolean);
+      if (!needle) return paths.length > 0;
+      return paths.some((path) => path.toLowerCase().replace(/\\/g, '/').includes(needle));
+    });
+  },
+  describe: (spec) => (spec.query ? `file path ~ "${spec.query}"` : 'has a file reference'),
 });
 
 /* ------------------------------------------------------------------ *

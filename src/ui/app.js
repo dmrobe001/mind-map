@@ -12,10 +12,10 @@ import { runCommand } from '../core/commands.js';
 import { selectNodes, selectEdges } from '../core/query.js';
 import { createStarterDocument } from '../core/starter.js';
 import { createDocument } from '../core/model.js';
-import {
-  FileBinding, supportsFileSystemAccess, saveAutosave, loadAutosave,
-  downloadDocument, pickFileForUpload,
-} from '../core/persistence.js';
+import { saveAutosave, loadAutosave } from '../core/persistence.js';
+import { FileIndex } from '../core/fileindex.js';
+import { bestLocatorForPath, basename } from '../core/locators.js';
+import { createPlatform } from '../platform/index.js';
 
 import { ViewState, buildEffectiveFilter } from './viewstate.js';
 import { Canvas } from './canvas.js';
@@ -40,19 +40,29 @@ export class App {
 
     this.store = new Store(createDocument());
     this.view = ViewState.restore();
-    this.file = new FileBinding();
+    // What this environment can do with files. Everything else asks the
+    // platform rather than sniffing for a native runtime.
+    this.platform = createPlatform();
+    this.fileIndex = new FileIndex(this.platform);
     this.dirty = false;
     this.pending = null;
     this.match = { nodes: new Set(), edges: new Set() };
 
     this.canvas = new Canvas({ root: this.elements.canvas, store: this.store, view: this.view });
     this.filters = new FilterPanel({ root: this.elements.left, store: this.store, view: this.view });
-    this.inspector = new Inspector({ root: this.elements.right, store: this.store, view: this.view });
+    this.inspector = new Inspector({
+      root: this.elements.right,
+      store: this.store,
+      view: this.view,
+      platform: this.platform,
+      fileIndex: this.fileIndex,
+    });
     this.palette = new Palette({ store: this.store, view: this.view });
     this.toolbar = new Toolbar({
       root: this.elements.toolbar,
       store: this.store,
       view: this.view,
+      platform: this.platform,
       handlers: {
         newMap: () => this.newMap(),
         open: () => this.openFile(),
@@ -65,6 +75,8 @@ export class App {
         zoom: (factor) => this.canvas.zoomBy(factor),
         fit: () => this.canvas.fitToContent(this.match.nodes),
         help: () => this.showHelp(),
+        roots: () => this.showRoots(),
+        importFolder: () => this.importFolder(),
       },
     });
 
@@ -76,22 +88,40 @@ export class App {
    * ================================================================ */
 
   async start() {
-    const restoredHandle = await this.file.restore().catch(() => false);
-    const autosaved = loadAutosave();
+    await this.platform.init().catch((err) => console.warn('Platform init failed', err));
 
-    if (autosaved) {
-      this.store.replaceDocument(autosaved, 'Restore session');
-      this.setMessage(restoredHandle
-        ? `Restored your last session. Connected to ${this.file.name}.`
-        : 'Restored your last session from this browser.');
-    } else {
-      this.store.replaceDocument(createStarterDocument(), 'Starter map');
-      this.setMessage('New map. Double-click the background to add a node.');
-      requestAnimationFrame(() => this.canvas.fitToContent());
+    // Where the native build is concerned the file on disk is authoritative,
+    // so reopening the last map beats restoring a browser-local snapshot of
+    // it. Anything unsaved still lives in the autosave as a fallback.
+    const lastPath = this.platform.settings?.lastMapPath;
+    let opened = false;
+    if (this.platform.can.realPaths && lastPath) {
+      try {
+        const result = await this.platform.openMapAt(lastPath);
+        this.store.replaceDocument(result.doc, 'Reopen map');
+        this.setMessage(`Reopened ${basename(lastPath)}.`);
+        opened = true;
+      } catch {
+        this.setMessage(`Could not reopen ${basename(lastPath)}; it may have moved.`);
+      }
     }
 
-    this.toolbar.setFileState({ name: this.file.name, dirty: false });
+    if (!opened) {
+      const autosaved = loadAutosave();
+      if (autosaved) {
+        this.store.replaceDocument(autosaved, 'Restore session');
+        this.setMessage('Restored your last session.');
+      } else {
+        this.store.replaceDocument(createStarterDocument(), 'Starter map');
+        this.setMessage('New map. Double-click the background to add a node.');
+        requestAnimationFrame(() => this.canvas.fitToContent());
+      }
+    }
+
+    this.dirty = false;
+    this.toolbar.setFileState({ name: this.platform.connectedName, dirty: false });
     this.render();
+    this.refreshFileIndex({ force: true });
   }
 
   /* ================================================================ *
@@ -101,7 +131,7 @@ export class App {
   _wireEvents() {
     this.store.subscribe((doc, reason) => {
       this.dirty = true;
-      this.toolbar.setFileState({ name: this.file.name, dirty: true });
+      this.toolbar.setFileState({ name: this.platform.connectedName, dirty: true });
       this.queueAutosave(doc);
       if (reason?.replaced) this.view.clearSelection();
       this.render();
@@ -129,10 +159,21 @@ export class App {
       this.createNodeAt(x, y, { title: event.detail.title, edit: false });
     });
 
+    this.fileIndex.addEventListener('change', () => this.render());
+
+    // A native window has no tabs to open a link into, so web links are handed
+    // to the system browser instead of navigating the app away from itself.
+    document.addEventListener('click', (event) => {
+      const anchor = event.target.closest('a[href^="http"]');
+      if (!anchor || this.platform.id === 'browser') return;
+      event.preventDefault();
+      this.platform.openUrl(anchor.href).catch((err) => this.setMessage(err.message));
+    });
+
     document.addEventListener('keydown', (event) => this.onKeyDown(event));
 
     globalThis.addEventListener('beforeunload', (event) => {
-      if (!this.dirty || !this.file.connected) return;
+      if (!this.dirty || !this.platform.connectedName) return;
       event.preventDefault();
       event.returnValue = '';
     });
@@ -153,6 +194,7 @@ export class App {
       this.inspector.render();
       this.toolbar.render();
       this.renderStatus();
+      this.refreshFileIndex();
     });
   }
 
@@ -185,9 +227,24 @@ export class App {
         title: 'Show only nodes with no links',
         onclick: () => this.view.set({ advanced: { op: 'and', clauses: [{ op: 'orphan' }] } }),
       }) : null,
+      this.fileSummaryElement(),
       this.message ? h('span', { class: 'status-message', text: this.message }) : null,
     ];
     this.elements.status.append(...parts.filter(Boolean));
+  }
+
+  /** "3 of 11 files here" — the one number that says whether links will work. */
+  fileSummaryElement() {
+    if (!this.platform.can.realPaths) return null;
+    const { present, total } = this.fileIndex.summary();
+    if (!total) return null;
+    return h('button', {
+      class: 'link-button',
+      type: 'button',
+      text: `${present} of ${total} files here`,
+      title: 'Show only nodes that reference a file',
+      onclick: () => this.view.set({ advanced: { op: 'and', clauses: [{ op: 'filePath', query: '' }] } }),
+    });
   }
 
   setMessage(text) {
@@ -307,7 +364,8 @@ export class App {
 
   newMap() {
     if (this.dirty && !globalThis.confirm('Start a new map? Anything unsaved in this one is lost.')) return;
-    this.file.forget();
+    this.platform.forgetFile();
+    this.rememberLastPath(null);
     this.store.replaceDocument(createDocument({ title: 'Untitled map' }), 'New map');
     this.view.resetFilters();
     this.dirty = false;
@@ -317,52 +375,213 @@ export class App {
 
   async openFile() {
     try {
-      const result = supportsFileSystemAccess ? await this.file.open() : await pickFileForUpload();
+      const result = await this.platform.openMap();
       if (!result?.doc) return;
       this.store.replaceDocument(result.doc, 'Open map');
       this.dirty = false;
-      this.toolbar.setFileState({ name: this.file.name ?? result.filename ?? null, dirty: false });
+      this.rememberLastPath(result.path ?? null);
+      this.toolbar.setFileState({ name: this.platform.connectedName ?? result.filename, dirty: false });
       requestAnimationFrame(() => this.canvas.fitToContent());
+      this.refreshFileIndex({ force: true });
       this.setMessage(result.problems?.length
         ? `Opened with ${result.problems.length} problem(s): ${result.problems[0]}`
-        : `Opened ${this.file.name ?? result.filename ?? 'map'}.`);
+        : `Opened ${result.filename ?? 'map'}.`);
     } catch (err) {
       if (err.name !== 'AbortError') this.setMessage(`Could not open: ${err.message}`);
     }
   }
 
   async save() {
-    if (!supportsFileSystemAccess) {
-      downloadDocument(this.store.doc);
-      this.dirty = false;
-      this.toolbar.setFileState({ name: 'downloaded copy', dirty: false });
-      this.setMessage('Downloaded. This browser cannot write back to a file in place.');
-      return;
-    }
-    if (!this.file.connected) { await this.saveAs(); return; }
     try {
-      await this.file.save(this.store.doc);
+      const name = await this.platform.saveMap(this.store.doc);
       this.dirty = false;
-      this.toolbar.setFileState({ name: this.file.name, dirty: false });
-      this.setMessage(`Saved to ${this.file.name}.`);
+      this.rememberLastPath(this.platform.currentPath ?? null);
+      this.toolbar.setFileState({ name: this.platform.connectedName ?? name, dirty: false });
+      this.setMessage(this.platform.can.saveInPlace
+        ? `Saved to ${name}.`
+        : 'Downloaded. This browser cannot write back to a file in place.');
     } catch (err) {
-      this.setMessage(`Could not save: ${err.message}`);
+      if (err.name !== 'AbortError') this.setMessage(`Could not save: ${err.message}`);
     }
   }
 
   async saveAs() {
-    if (!supportsFileSystemAccess) { this.save(); return; }
     try {
-      const name = await this.file.saveAs(
+      const name = await this.platform.saveMapAs(
         this.store.doc,
         `${(this.store.doc.title || 'map').replace(/[^\w.-]+/g, '-')}.mindmap.json`,
       );
       this.dirty = false;
-      this.toolbar.setFileState({ name, dirty: false });
+      this.rememberLastPath(this.platform.currentPath ?? null);
+      this.toolbar.setFileState({ name: this.platform.connectedName ?? name, dirty: false });
       this.setMessage(`Saved to ${name}.`);
     } catch (err) {
       if (err.name !== 'AbortError') this.setMessage(`Could not save: ${err.message}`);
     }
+  }
+
+  /** Per-machine, never in the document — see core/locators.js. */
+  async rememberLastPath(path) {
+    if (!this.platform.can.realPaths) return;
+    await this.platform.writeSettings({ ...this.platform.settings, lastMapPath: path });
+  }
+
+  /* ================================================================ *
+   * Files referenced by the map
+   * ================================================================ */
+
+  get locatorContext() {
+    return {
+      deviceRoots: this.platform.settings?.roots ?? {},
+      separator: this.platform.device?.separator ?? '/',
+    };
+  }
+
+  refreshFileIndex(options = {}) {
+    this.fileIndex.refresh(this.store.doc, this.locatorContext, options);
+  }
+
+  /**
+   * Point at a folder and get a node per file, hanging off the selection.
+   *
+   * This is the closest thing to the "a layer over my filesystem" idea that
+   * holds up: the folder becomes a neighbourhood of the map, and from there
+   * the files can be linked to anything, which is the part a directory tree
+   * cannot do.
+   */
+  async importFolder() {
+    if (!this.platform.can.browseDirectories) {
+      this.setMessage('Only the desktop app can browse folders.');
+      return;
+    }
+    const folder = await this.platform.pickDirectory();
+    if (!folder) return;
+
+    let listing;
+    try {
+      listing = await this.platform.listDir(folder, { includeHidden: false });
+    } catch (err) {
+      this.setMessage(`Could not read that folder: ${err.message}`);
+      return;
+    }
+
+    const files = listing.filter((entry) => !entry.isDir);
+    if (!files.length) {
+      this.setMessage('That folder has no files in it.');
+      return;
+    }
+    if (!globalThis.confirm(`Create ${files.length} node(s) from ${basename(folder)}?`)) return;
+
+    let parentId = this.view.soleSelectedNode;
+    if (!parentId) {
+      const { x, y } = this.canvas.viewCenter();
+      parentId = this.createNodeAt(x, y, { title: basename(folder), edit: false });
+    }
+
+    const entries = files.map((entry) => ({
+      title: entry.name,
+      fields: { source: 'folder-import' },
+      locator: bestLocatorForPath(entry.path, {
+        deviceRoots: this.locatorContext.deviceRoots,
+        device: this.platform.device,
+      }),
+    }));
+
+    const created = runCommand('node.importFiles', this.store, { parentId, entries });
+    this.refreshFileIndex({ force: true });
+    this.setMessage(created.length
+      ? `Added ${created.length} node(s) from ${basename(folder)}.`
+      : 'Everything in that folder was already on the map.');
+  }
+
+  /**
+   * Map this machine's paths onto the document's named roots.
+   *
+   * The roots themselves belong to the document so they travel; the paths
+   * belong to the machine so they do not.
+   */
+  showRoots() {
+    const dialog = document.querySelector('#roots-dialog');
+    const body = dialog.querySelector('.dialog-body');
+    const deviceRoots = { ...(this.platform.settings?.roots ?? {}) };
+
+    const persist = async () => {
+      await this.platform.writeSettings({ ...this.platform.settings, roots: deviceRoots });
+      this.refreshFileIndex({ force: true });
+      this.render();
+    };
+
+    const draw = () => {
+      body.innerHTML = '';
+      for (const root of Object.values(this.store.doc.roots ?? {})) {
+        body.append(h('div', { class: 'root-row' }, [
+          h('div', { class: 'root-head' }, [
+            h('strong', { text: root.label }),
+            h('button', {
+              type: 'button', class: 'mini danger', text: 'remove root',
+              title: 'Remove this root from the map for every machine',
+              onclick: () => {
+                if (!globalThis.confirm(`Remove the "${root.label}" root from this map?`)) return;
+                runCommand('root.delete', this.store, { id: root.id });
+                draw();
+              },
+            }),
+          ]),
+          root.hint ? h('p', { class: 'hint', text: root.hint }) : null,
+          h('div', { class: 'field-row' }, [
+            h('input', {
+              type: 'text',
+              class: 'grow',
+              value: deviceRoots[root.id] ?? '',
+              placeholder: this.platform.can.realPaths
+                ? 'not set on this machine'
+                : 'a browser tab cannot resolve paths',
+              oninput: (event) => { deviceRoots[root.id] = event.target.value.trim(); },
+              onchange: persist,
+            }),
+            this.platform.can.browseDirectories
+              ? h('button', {
+                type: 'button', class: 'mini', text: 'browse…',
+                onclick: async () => {
+                  const picked = await this.platform.pickDirectory();
+                  if (!picked) return;
+                  deviceRoots[root.id] = picked;
+                  await persist();
+                  draw();
+                },
+              })
+              : null,
+          ]),
+        ]));
+      }
+
+      body.append(h('form', {
+        class: 'inline-form',
+        onsubmit: (event) => {
+          event.preventDefault();
+          const input = event.target.querySelector('input');
+          const label = input.value.trim();
+          if (!label) return;
+          runCommand('root.create', this.store, { label });
+          input.value = '';
+          draw();
+        },
+      }, [
+        h('input', { type: 'text', placeholder: 'New root, e.g. "Work laptop"' }),
+        h('button', { type: 'submit', class: 'mini', text: 'add' }),
+      ]));
+
+      const device = this.platform.device;
+      body.append(h('p', {
+        class: 'hint',
+        text: device?.name
+          ? `This machine is "${device.name}". Root names are saved in the map; these paths are not.`
+          : 'Root names are saved in the map; the paths you set here stay on this machine.',
+      }));
+    };
+
+    draw();
+    dialog.showModal();
   }
 
   /* ================================================================ *

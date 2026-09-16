@@ -105,14 +105,21 @@ export function createStarterDocument() {
 
   const content = add({
     title: 'Node contents',
-    summary: 'Markdown, links, code, file paths, LaTeX.',
+    summary: 'Markdown, links, code, files, LaTeX.',
     x: 320,
     y: -140,
     tags: ['reference'],
     content: [
       createBlock({ type: 'markdown', label: 'notes', value: 'Blocks stack up inside a node.\n\n> Anything the app does not recognise is kept as-is on save.' }),
       createBlock({ type: 'link', label: 'somewhere useful', value: 'https://example.com' }),
-      createBlock({ type: 'file', label: 'a file on disk', value: '/home/you/notes/reading-list.md' }),
+      createBlock({
+        type: 'file',
+        label: 'a file on disk',
+        // Relative to the "Cloud drive" root, so it resolves on every machine
+        // that has pointed that root somewhere. Toolbar → Roots… sets it.
+        value: 'notes/reading-list.md',
+        meta: { root: 'sync' },
+      }),
     ],
   });
 
@@ -122,6 +129,27 @@ export function createStarterDocument() {
     x: 40,
     y: -200,
     fields: { source: 'manual', priority: '2' },
+  });
+
+  const files = add({
+    title: 'Files live where they live',
+    summary: 'One reference, several locations.',
+    x: 560,
+    y: 40,
+    tags: ['reference'],
+    content: [createBlock({
+      type: 'markdown',
+      value: [
+        'A file reference holds every place that file exists. A location recorded',
+        'relative to a **named root** resolves on every machine that has mapped that',
+        'root; an absolute one only works where it was recorded.',
+        '',
+        'The dot says which: green is here, red is missing, hollow means this machine',
+        'has never been told where that root is.',
+        '',
+        'In a browser tab paths are recorded but inert. The desktop build opens them.',
+      ].join('\n'),
+    })],
   });
 
   const graph = add({
@@ -142,6 +170,7 @@ export function createStarterDocument() {
   link(filtering, labels);
   link(filtering, focusDemo);
   link(content, fields);
+  link(content, files);
   link(capture, todo);
   link(graph, filtering, 'relates');
   link(fields, filtering, 'references');

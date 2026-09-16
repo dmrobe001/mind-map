@@ -18,6 +18,10 @@ archaeology.
 | Rich node content | markdown, plain text, link, file reference, code, LaTeX blocks |
 | Structured data on a node | `node.fields`, queryable with the `field` condition |
 | Saved filters | `doc.views` — "No work stuff" is two clicks and stays |
+| Real file access | the desktop build — open a file in its own program, browse folders |
+| Portable file links | named roots plus per-machine alternates, `core/locators.js` |
+| Notes that refer to files | the `file` block and the `filePath` condition |
+| A node per file in a folder | Import folder… |
 
 ## Next, in rough order of value per unit of work
 
@@ -58,43 +62,62 @@ you need a cycle guard.
 
 ## The filesystem overlay
 
-This is the ambition worth being precise about, because a browser page can do
-part of it and not the rest.
+This was the ambition worth being precise about, and most of it now works.
 
-**What is already useful:** the `file` content block records a path. Every note
-that mentions a file is then a text search away, and "show me every node
-referring to this path" is `{op:'text', query:'/path/to/thing'}` — or a
-dedicated `filePath` operator if you want it exact.
+**What works today.** The desktop build reads and writes any path your user
+account can. A file reference records every place a file lives; a green dot
+means it is on this machine and the "open" button hands it to whatever program
+owns it. "Import folder…" turns a directory into a neighbourhood of the map,
+which is the part a directory tree cannot do — from there a file can be linked
+to anything, and gain a second association later without moving.
 
-**What a browser cannot do:** enumerate your disk, watch for changes, or follow
-a `file://` link from a page served over http. Those are not missing features,
-they are the sandbox.
+"Every note that mentions this file" is the `filePath` condition, and it
+searches every recorded location, not just the ones that resolve here — so a
+file that only exists on the other laptop still turns up the note about it.
 
-**What closes most of the gap:** the File System Access API's directory picker.
-Granting the page access to a folder — once, explicitly — gives it the ability
-to walk that tree, read files, and write to them. That is enough for:
+**What is still genuinely out of reach.** Watching the filesystem for changes,
+and following a file link from a browser tab. The first is a real feature that
+nobody has built here yet (a Rust file watcher emitting events would do it); the
+second is the browser sandbox and always will be.
 
-- a command that scans a chosen folder and creates a node per file, tagged with
-  its extension, positioned by directory
-- opening a file's contents into a node's content blocks
-- keeping a `fields.path` on those nodes so a re-scan can reconcile renames
-  instead of duplicating
+**What is left to design.** Reconciliation. Right now a re-import skips files
+already referenced, so it will not duplicate, but it also will not notice a
+rename, a move, or a deletion. The pieces are in place — `node.importFiles`
+already writes `fields.source`, and `file_meta` returns size and mtime — but the
+policy is not: when a file vanishes, is that a node to delete, a node to mark,
+or a node to leave alone because the file is merely on a disk you have not
+plugged in? The last one is why this is a design question rather than a bug.
 
-It is Chromium-only today, it needs re-granting per session, and it will never
-see anything outside the folder you picked. Whether that is the tool you
-described or a disappointing imitation of it is a real question, and the
-honest answer is that you will only know once you have tried it on one of your
-actual project folders. `persistence.js` already uses the same API for single
-files, so the groundwork is there.
+## Sync, and the conflict you will eventually hit
 
-**The other half of the idea** — notes that refer to files, and seeing all
-notes that refer to a given file — needs none of that, and works today.
+Export/import through a cloud drive works today: the map is one JSON file, so
+keep it in the synced folder. The failure mode is editing on two machines before
+the drive catches up, which leaves one side's edits in a "conflicted copy" file
+rather than merging them.
+
+The cheap fix worth doing first is a revision counter plus a check that the file
+on disk has not changed since it was loaded, so an overwrite becomes a prompt
+instead of a silent loss. The real fix, if it keeps happening, is a file per
+node — most conflicts then become non-overlapping writes that sync tools handle
+by themselves. That is a format change, and the time to make it is when it
+starts hurting. [PLATFORMS.md](PLATFORMS.md) has the longer version.
+
+## Mobile
+
+The native shell has iOS and Android targets and the mobile entry point is in
+place, but **nothing has been built or run** — see
+[PLATFORMS.md](PLATFORMS.md#mobile). Two things need designing rather than
+porting: file locators, since phones use content URIs rather than paths, and
+touch, since drag-to-link and a keyboard-first capture flow have no obvious
+finger equivalent.
 
 ## Deliberately not planned
 
 - **Sync, accounts, a server.** The file is the artefact. Put it in a folder
-  that syncs, or in git.
+  that syncs, or in git. Conflict *handling* is worth improving; a sync service
+  is not.
 - **Real-time collaboration.** It would reshape the store from snapshots to
   operations, which is a different project.
-- **A build step,** until the absence of one actually hurts. Right now a change
-  costs a reload, and that is the property keeping this thing easy to bend.
+- **A build step for the frontend,** until the absence of one actually hurts.
+  A change still costs a reload, in the browser and in the native window alike,
+  and that is the property keeping this thing easy to bend.

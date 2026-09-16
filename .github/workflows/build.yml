@@ -1,0 +1,89 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # The web app has no build step and no dependencies, so its checks are fast
+  # and run on their own rather than waiting behind three platform builds.
+  checks:
+    name: tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Core tests
+        run: node --test
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - name: Stage the frontend
+        run: node scripts/stage-frontend.mjs
+      - name: Native tests
+        run: cargo test --lib --manifest-path src-tauri/Cargo.toml
+      - name: Lint the native code
+        run: cargo clippy --manifest-path src-tauri/Cargo.toml -- -D warnings
+
+  desktop:
+    name: ${{ matrix.label }}
+    needs: checks
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-22.04, label: Linux, args: '' }
+          # Two macOS builds: Apple silicon and Intel.
+          - { os: macos-latest, label: macOS (arm64), args: '--target aarch64-apple-darwin' }
+          - { os: macos-latest, label: macOS (x64), args: '--target x86_64-apple-darwin' }
+          - { os: windows-latest, label: Windows, args: '' }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Linux system dependencies
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ contains(matrix.args, 'aarch64') && 'aarch64-apple-darwin' || contains(matrix.args, 'x86_64-apple') && 'x86_64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: ${{ matrix.label }}
+
+      - name: Install the Tauri CLI
+        run: npm ci
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: ${{ matrix.args }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mind-map-${{ matrix.label }}
+          path: |
+            src-tauri/target/release/bundle/**/*.AppImage
+            src-tauri/target/release/bundle/**/*.deb
+            src-tauri/target/release/bundle/**/*.dmg
+            src-tauri/target/release/bundle/**/*.msi
+            src-tauri/target/**/release/bundle/**/*.dmg
+          if-no-files-found: warn

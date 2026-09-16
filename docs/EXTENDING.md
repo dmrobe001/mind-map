@@ -126,6 +126,43 @@ away, but only following `references`" is expressible today.
 
 ---
 
+---
+
+## 5. A new environment
+
+If you later want the local-helper-process approach, or a mobile build, you do
+not touch the UI. Implement `src/platform/platform.js`:
+
+```js
+import { Platform } from './platform.js';
+
+export class HelperPlatform extends Platform {
+  constructor() {
+    super();
+    this.id = 'helper';
+    this.label = 'The local helper';
+    this.can = { ...this.can, realPaths: true, openExternally: true, browseDirectories: true };
+  }
+
+  async listDir(path) {
+    return (await fetch(`http://127.0.0.1:7777/dir?path=${encodeURIComponent(path)}`)).json();
+  }
+  // …and the rest.
+}
+```
+
+Then add it to the check in `src/platform/index.js`. The UI is already written
+against `platform.can.*`, so features light up on their own.
+
+Two rules:
+
+- **Report capabilities honestly.** Claiming `openExternally` you cannot deliver
+  produces a button that fails when pressed, which is worse than no button.
+- **Never let paths leak into the document.** Anything machine-specific belongs
+  in `readSettings`/`writeSettings`. See `core/locators.js`.
+
+---
+
 ## Optional: LaTeX with KaTeX
 
 The `latex` block type renders with KaTeX when `globalThis.katex` exists and
@@ -158,3 +195,9 @@ its renderer to travel together.
 - **Don't reach for a framework before you need one.** The whole point of the
   no-build setup is that a change costs a reload. That is worth more than it
   looks when you are still working out what the tool is.
+- **Don't import `@tauri-apps/api` in the frontend.** It would need a bundler,
+  and the same files would stop running in a plain browser tab. The native
+  adapter goes through the global `invoke`; new native capabilities are new
+  `#[tauri::command]`s in `src-tauri/src/lib.rs` plus a method on the adapter.
+- **Don't write an absolute path into the document without a locator.** It will
+  be dead the first time the map is opened anywhere else.
