@@ -1,0 +1,39 @@
+# ---- OS / editor noise ----
+.DS_Store
+Thumbs.db
+desktop.ini
+*.swp
+*~
+.vscode/
+.idea/
+
+# ---- Dependencies & build output ----
+node_modules/
+dist/
+build/
+.cache/
+*.tsbuildinfo
+
+# ---- Logs ----
+*.log
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- Environment / secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Local mind-map data ----
+# Maps you save alongside the repo stay yours, not the project's.
+# Anything in local/ is ignored; sample maps live in examples/.
+local/
+*.mindmap.json
+!examples/*.mindmap.json
+
+# ---- Python (for the bundled dev server helper) ----
+__pycache__/
+*.pyc
+.venv/
+venv/
