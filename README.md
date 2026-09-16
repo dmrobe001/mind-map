@@ -46,7 +46,7 @@ Then open <http://localhost:8000/>.
 ```sh
 npm install        # fetches the Tauri CLI; the UI itself stays dependency-free
 npm run dev        # develop, with reload
-npm run build      # produce an installer for this platform
+npm run build      # produce an installer for this platform (a plain portable .exe on Windows)
 ```
 
 Needs a [Rust toolchain](https://rustup.rs) and your platform's webview
