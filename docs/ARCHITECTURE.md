@@ -17,7 +17,13 @@ src/core/           everything that would still make sense without a screen
   commands.js       named, undoable operations — the app's verbs
   persistence.js    autosave, file handles, import/export
   registry.js       the extension points
+  locators.js       portable file references — named roots and alternates
+  fileindex.js      which referenced files exist on this machine
   starter.js        the map you get on first run
+src/platform/       what this environment can do with files
+  platform.js       the capability interface
+  browser.js        File System Access, or download/upload
+  tauri.js          the native adapter, talking to the Rust commands
 src/content/        node content types
   markdown.js       small dependency-free Markdown renderer
   renderers.js      one registry entry per content block type
@@ -30,14 +36,22 @@ src/ui/             everything that touches the DOM
   toolbar.js        file operations, history, zoom
   viewstate.js      camera, selection, active filter
 src/styles.css      all of the styling
-tests/core.test.mjs tests for everything above that doesn't touch the DOM
+src-tauri/          the native shell: Rust commands, config, icons
+scripts/            a zero-dependency dev server and the frontend staging step
+tests/              tests for everything that doesn't touch the DOM
 examples/           a sample map file
 docs/               these documents
 ```
 
-There is no build step and no dependency tree. Everything is native ES modules
-loaded straight from disk, which means the only thing between you and a change
-is a reload.
+The web app has no build step and no dependency tree: native ES modules loaded
+straight from disk, so the only thing between you and a change is a reload.
+That holds in the native build too — it embeds these exact files and reaches
+Rust through a global, rather than importing an npm package that would only
+resolve in one of the two environments. `npm` exists here solely to run the
+Tauri CLI; nothing under `src/` imports from `node_modules`.
+
+See [PLATFORMS.md](PLATFORMS.md) for why there is a native build at all, and
+what it does and doesn't buy.
 
 ## The three ideas worth knowing
 
@@ -131,14 +145,28 @@ resolve their node set once, at compile time, from the `GraphIndex`; the
 predicate is then a Set lookup. That is why focus filters stay fast on a large
 map.
 
+### 4. Capability, not environment
+
+`src/platform/` answers "what can this environment do with files" and nothing
+outside it sniffs for a native runtime. The UI asks `platform.can.realPaths`
+and hides what it cannot do, so a browser tab never shows a button that would
+fail when pressed, and a new environment is one adapter rather than an audit.
+
+The direct consequence is the locator model in `core/locators.js`: a file
+reference is a *list* of places a file might be, each resolved against this
+machine's own root mappings. Root names travel in the document; root paths stay
+on the machine. That is what stops a link recorded on the desktop from being
+dead weight on the laptop. [PLATFORMS.md](PLATFORMS.md) has the full reasoning.
+
 ## Where state lives, and why
 
 | State | Lives in | Reason |
 | --- | --- | --- |
-| Nodes, edges, labels, saved views | the document | it is your data |
+| Nodes, edges, labels, saved views, root *names* | the document | it is your data |
+| Root *paths*, the last map opened, device id | per-machine settings | syncing them would break every other machine |
 | Camera, selection, the active filter | `ui/viewstate.js` + localStorage | panning is not an edit |
 | Undo history | the store, in memory | scoped to the session |
-| The file handle | IndexedDB | so a reload can reconnect to the same file |
+| Which referenced files exist | `core/fileindex.js`, in memory | a cache of the disk, never authoritative |
 
 Autosave to localStorage is a crash net, not the artefact. The file on disk is
 the artefact. The toolbar always says which of the two you are relying on.

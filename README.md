@@ -1,7 +1,8 @@
 # mind-map
 
-A browser-based mind map editor and viewer. Local-only, serverless, no build
-step, no dependencies.
+A mind map editor for things that refuse to live in one folder. Local-only, no
+server, no account. Runs as a desktop app with real file access, or as a plain
+page in a browser tab.
 
 ![the editor](docs/screenshot.png)
 
@@ -31,19 +32,42 @@ Design consequences of that goal:
 
 ## Running it
 
-It's static files, but ES modules need a real origin, so `file://` won't do:
+**In a browser** — the UI has no build step and no dependencies, so any static
+server will do. ES modules need a real origin, so `file://` won't work:
 
 ```sh
-python3 -m http.server 8000     # or: npx http-server -p 8000 -c-1
+npm run serve      # or: python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000/>. Any static server works. There is nothing
-to install and nothing to build.
+Then open <http://localhost:8000/>.
 
-Your map lives in a JSON file you choose. In Chromium-based browsers the app
-writes back to that file in place (`Ctrl`+`S`); elsewhere Save downloads a copy
-and Open takes an upload. Either way there's a localStorage autosave underneath
+**As a desktop app** — this is the build that can actually open your files:
+
+```sh
+npm install        # fetches the Tauri CLI; the UI itself stays dependency-free
+npm run dev        # develop, with reload
+npm run build      # produce an installer for this platform
+```
+
+Needs a [Rust toolchain](https://rustup.rs) and your platform's webview
+development packages, which [Tauri's prerequisites
+page](https://v2.tauri.app/start/prerequisites/) lists. If you would rather not
+set that up, the `build` workflow produces binaries for Linux, macOS and Windows
+on every push.
+
+### Which build can do what
+
+| | Browser tab | Desktop app |
+| --- | --- | --- |
+| Editing, filtering, everything about the map | yes | yes |
+| Save back to the file you opened | Chromium only | yes |
+| Open a referenced file in its own program | no | yes |
+| Browse folders, import a folder of files | no | yes |
+
+Your map is a JSON file you choose. There's a localStorage autosave underneath
 as a crash net, and the toolbar always tells you which one you're relying on.
+File references are recorded in both builds — a browser tab simply can't open
+them, and says so instead of offering a button that fails.
 
 ## Using it
 
@@ -78,13 +102,39 @@ Any combination can be saved as a named view, which is stored in the map file.
 ### Node contents
 
 A node holds an ordered list of typed blocks: markdown, plain text, links, file
-paths, code, and LaTeX. Blocks of a type this build doesn't recognise are kept
-intact on save rather than dropped. `[[Double brackets]]` in markdown link to
-another node by title, and offer to create it if it doesn't exist.
+references, code, and LaTeX. Blocks of a type this build doesn't recognise are
+kept intact on save rather than dropped. `[[Double brackets]]` in markdown link
+to another node by title, and offer to create it if it doesn't exist.
 
 Every node also has a free-form `fields` object — arbitrary key/value data,
 queryable with the `field` condition, there so you can start recording
 structure before the app knows what to do with it.
+
+### Files
+
+A path is a fact about one machine; a map is a thing you carry between
+machines. So a file reference holds *every* place that file lives:
+
+- A location relative to a **named root** — say `Cloud drive` — resolves on
+  every machine that has mapped that root. The map stores the root's name; each
+  machine stores its own path for it (toolbar → **Roots…**). This is the case
+  worth aiming for, and picking a file through the dialog does it automatically
+  when the file is inside a mapped root.
+- An **absolute** location, optionally tagged with the machine it belongs to,
+  for the things that genuinely exist in one place.
+
+A dot on each location says where you stand: green is here and openable, red
+resolves to a path with nothing at it, hollow means this machine has never been
+told where that root is.
+
+![file references in the desktop app](docs/desktop-files.png)
+ **Import folder…** turns a directory into a
+neighbourhood of the map — a node per file, which you can then link to anything
+else, which is the part a directory tree can't do.
+
+"Every note that mentions this file" is the `references a file` condition, and
+it searches every recorded location — so a file that only exists on your other
+laptop still turns up the note about it.
 
 ## Extending it
 
@@ -94,7 +144,9 @@ renderer.
 
 - [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — how it fits together and why
 - [`docs/EXTENDING.md`](docs/EXTENDING.md) — recipes for new filters, content
-  types, commands and edge types
+  types, commands, edge types and environments
+- [`docs/PLATFORMS.md`](docs/PLATFORMS.md) — why there's a native build, how
+  portable file references work, and what mobile would still take
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — where the known wants would land, and
   what each would cost
 
@@ -102,13 +154,19 @@ renderer.
 
 ## Tests
 
-The DOM-free core — model, graph traversal, the filter language, the store and
-the Markdown renderer — has a test suite that runs on node's built-in runner
-with nothing installed:
-
 ```sh
-node --test
+node --test                                      # the DOM-free core
+cargo test --manifest-path src-tauri/Cargo.toml  # the native commands
 ```
+
+The core suite covers the model, graph traversal, the filter language, the
+store, file locators and the Markdown renderer, and runs on node's built-in
+runner with nothing installed.
+
+`tests/manual/tauri-bridge.mjs` drives the UI against a scripted stand-in for
+the native bridge — useful for the cases that are awkward to stage for real,
+like a root this machine hasn't mapped. It needs Playwright, which is why it
+isn't part of `node --test`.
 
 ## Your data
 
@@ -119,7 +177,8 @@ with a migration chain so old files keep opening. See
 ## Status
 
 Early. The data model and the extension points are the parts designed to last;
-the UI is expected to churn as the tool finds its shape.
+the UI is expected to churn as the tool finds its shape. Mobile targets exist in
+the native shell but have never been built or run.
 
 ## License
 

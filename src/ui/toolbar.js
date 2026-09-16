@@ -7,13 +7,13 @@
  */
 
 import { h } from './filterpanel.js';
-import { supportsFileSystemAccess } from '../core/persistence.js';
 
 export class Toolbar {
-  constructor({ root, store, view, handlers }) {
+  constructor({ root, store, view, platform, handlers }) {
     this.root = root;
     this.store = store;
     this.view = view;
+    this.platform = platform;
     this.handlers = handlers;
     this.fileState = { name: null, dirty: false, message: '' };
   }
@@ -37,6 +37,7 @@ export class Toolbar {
       onchange: (event) => this.handlers.rename(event.target.value),
     });
 
+    const canSaveInPlace = this.platform?.can.saveInPlace;
     const fileLabel = name
       ? `${name}${dirty ? ' •' : ''}`
       : 'not saved to a file yet';
@@ -48,10 +49,10 @@ export class Toolbar {
         type: 'button',
         class: 'tool primary',
         text: 'Save',
-        title: supportsFileSystemAccess ? 'Write back to the open file (Ctrl+S)' : 'Download the map file (Ctrl+S)',
+        title: canSaveInPlace ? 'Write back to the open file (Ctrl+S)' : 'Download the map file (Ctrl+S)',
         onclick: () => this.handlers.save(),
       }),
-      supportsFileSystemAccess
+      canSaveInPlace
         ? h('button', { type: 'button', class: 'tool', text: 'Save as…', onclick: () => this.handlers.saveAs() })
         : null,
       h('span', { class: `file-state ${dirty ? 'is-dirty' : ''}`, text: fileLabel }),
@@ -96,7 +97,29 @@ export class Toolbar {
       h('button', { type: 'button', class: 'tool', text: '?', title: 'Keyboard shortcuts', onclick: () => this.handlers.help() }),
     ]);
 
+    // Only shown where paths mean something; a browser tab would offer a
+    // button that could never do anything.
+    const fileTools = this.platform?.can.realPaths
+      ? h('div', { class: 'toolbar-group' }, [
+        h('button', {
+          type: 'button',
+          class: 'tool',
+          text: 'Import folder…',
+          title: 'Create a node per file in a folder',
+          onclick: () => this.handlers.importFolder(),
+        }),
+        h('button', {
+          type: 'button',
+          class: 'tool',
+          text: 'Roots…',
+          title: 'Tell this machine where the map\'s named locations live',
+          onclick: () => this.handlers.roots(),
+        }),
+      ])
+      : null;
+
     this.root.append(title, fileGroup, historyGroup, viewGroup);
+    if (fileTools) this.root.append(fileTools);
     if (message) this.root.append(h('span', { class: 'toolbar-message', text: message }));
   }
 }

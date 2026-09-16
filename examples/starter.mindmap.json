@@ -1,18 +1,19 @@
 {
   "version": 1,
-  "id": "doc_7b430da6e3ebea95",
+  "id": "doc_863449afb3ba971f",
   "title": "Getting started",
   "nodes": {
-    "n_7f990d6829e0ab73": {
-      "id": "n_7f990d6829e0ab73",
+    "n_f4ee23f1020cc75b": {
+      "id": "n_f4ee23f1020cc75b",
       "title": "This map",
       "summary": "Drag me. Double-click the background to add a node.",
       "content": [
         {
-          "id": "b_f42ea1cef78e2b66",
+          "id": "b_2925629f0b50f184",
           "type": "markdown",
           "value": "Everything here is an ordinary node. Delete it all when you are done reading.\n\n- **Link two nodes** by dragging the dot on a card's right edge onto another card.\n- **Add a child** with `Tab` while a node is selected.\n- **Find anything** with `Ctrl`+`K`.",
-          "label": ""
+          "label": "",
+          "meta": {}
         }
       ],
       "tags": [
@@ -23,19 +24,20 @@
       "y": 0,
       "fields": {},
       "color": null,
-      "created": "2026-09-16T00:45:05.210Z",
-      "updated": "2026-09-16T00:45:05.210Z"
+      "created": "2026-09-16T02:15:00.121Z",
+      "updated": "2026-09-16T02:15:00.121Z"
     },
-    "n_f6ecba70e813c709": {
-      "id": "n_f6ecba70e813c709",
+    "n_789bb96aed3bf47f": {
+      "id": "n_789bb96aed3bf47f",
       "title": "Quick capture",
       "summary": "Ctrl+K, type a name, Shift+Enter.",
       "content": [
         {
-          "id": "b_51694479b5e30eb5",
+          "id": "b_a83d14c813cce2a5",
           "type": "markdown",
           "value": "If the quick switcher finds nothing, Enter creates a node with what you typed.\n\nA thought you cannot file in five seconds is a thought you will not file.",
-          "label": ""
+          "label": "",
+          "meta": {}
         }
       ],
       "tags": [],
@@ -44,19 +46,20 @@
       "y": 160,
       "fields": {},
       "color": null,
-      "created": "2026-09-16T00:45:05.210Z",
-      "updated": "2026-09-16T00:45:05.210Z"
+      "created": "2026-09-16T02:15:00.121Z",
+      "updated": "2026-09-16T02:15:00.121Z"
     },
-    "n_3b3cabf0e2215023": {
-      "id": "n_3b3cabf0e2215023",
+    "n_6812cad35972814f": {
+      "id": "n_6812cad35972814f",
       "title": "Filtering",
       "summary": "Labels, status, focus, and compound queries.",
       "content": [
         {
-          "id": "b_b317c4afa61a592e",
+          "id": "b_86558be9a5326028",
           "type": "markdown",
           "value": "Label chips cycle **neutral → require → exclude**, so hiding everything tagged\n`work` is two clicks.\n\nFocus does the relationship filters: everything within N links of a node,\neverything under it, everything above it, or its whole cluster.\n\nThe Query section stacks conditions with AND/OR and a per-row NOT, and drops\nto raw JSON when you need nesting.",
-          "label": ""
+          "label": "",
+          "meta": {}
         }
       ],
       "tags": [
@@ -67,11 +70,11 @@
       "y": 200,
       "fields": {},
       "color": null,
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.121Z",
+      "updated": "2026-09-16T02:15:00.121Z"
     },
-    "n_94bb49b6cfce967a": {
-      "id": "n_94bb49b6cfce967a",
+    "n_19680d46611c2f14": {
+      "id": "n_19680d46611c2f14",
       "title": "Labels are yours",
       "summary": "work / personal are just two examples.",
       "content": [],
@@ -84,11 +87,11 @@
       "y": 380,
       "fields": {},
       "color": null,
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.121Z",
+      "updated": "2026-09-16T02:15:00.121Z"
     },
-    "n_9583b48bd13a4fee": {
-      "id": "n_9583b48bd13a4fee",
+    "n_61b4960e7e5774cc": {
+      "id": "n_61b4960e7e5774cc",
       "title": "Relationship filters",
       "summary": "Select a node, then \"use selected\" under Focus.",
       "content": [],
@@ -100,11 +103,11 @@
       "y": 380,
       "fields": {},
       "color": null,
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.121Z",
+      "updated": "2026-09-16T02:15:00.121Z"
     },
-    "n_a3eb6baacbd263d1": {
-      "id": "n_a3eb6baacbd263d1",
+    "n_3ed4a4642f1cad74": {
+      "id": "n_3ed4a4642f1cad74",
       "title": "Try marking this done",
       "summary": "Press t, or click the dot on the card.",
       "content": [],
@@ -114,31 +117,37 @@
       "y": 170,
       "fields": {},
       "color": null,
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "n_1836c17b2069236b": {
-      "id": "n_1836c17b2069236b",
+    "n_d175d74cb33631b8": {
+      "id": "n_d175d74cb33631b8",
       "title": "Node contents",
-      "summary": "Markdown, links, code, file paths, LaTeX.",
+      "summary": "Markdown, links, code, files, LaTeX.",
       "content": [
         {
-          "id": "b_5a86af6a8a453eb6",
+          "id": "b_f881c4a92f7fc9ab",
           "type": "markdown",
           "value": "Blocks stack up inside a node.\n\n> Anything the app does not recognise is kept as-is on save.",
-          "label": "notes"
+          "label": "notes",
+          "meta": {}
         },
         {
-          "id": "b_50fa90623977d6c6",
+          "id": "b_6aa1e9b63c2faf62",
           "type": "link",
           "value": "https://example.com",
-          "label": "somewhere useful"
+          "label": "somewhere useful",
+          "meta": {}
         },
         {
-          "id": "b_d27605da49e901a9",
+          "id": "b_b7f956b300149b05",
           "type": "file",
-          "value": "/home/you/notes/reading-list.md",
-          "label": "a file on disk"
+          "value": "notes/reading-list.md",
+          "label": "a file on disk",
+          "meta": {
+            "root": "sync",
+            "alternates": []
+          }
         }
       ],
       "tags": [
@@ -149,11 +158,11 @@
       "y": -140,
       "fields": {},
       "color": null,
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "n_92d170e7ee1ae67a": {
-      "id": "n_92d170e7ee1ae67a",
+    "n_fe0bcecdd5aefab4": {
+      "id": "n_fe0bcecdd5aefab4",
       "title": "Structured fields",
       "summary": "Arbitrary key/value data, queryable.",
       "content": [],
@@ -166,19 +175,44 @@
         "priority": "2"
       },
       "color": null,
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "n_e8c4239fd62fad68": {
-      "id": "n_e8c4239fd62fad68",
+    "n_2b2e0e3fe96a1686": {
+      "id": "n_2b2e0e3fe96a1686",
+      "title": "Files live where they live",
+      "summary": "One reference, several locations.",
+      "content": [
+        {
+          "id": "b_8f19e046d92927fc",
+          "type": "markdown",
+          "value": "A file reference holds every place that file exists. A location recorded\nrelative to a **named root** resolves on every machine that has mapped that\nroot; an absolute one only works where it was recorded.\n\nThe dot says which: green is here, red is missing, hollow means this machine\nhas never been told where that root is.\n\nIn a browser tab paths are recorded but inert. The desktop build opens them.",
+          "label": "",
+          "meta": {}
+        }
+      ],
+      "tags": [
+        "reference"
+      ],
+      "status": null,
+      "x": 560,
+      "y": 40,
+      "fields": {},
+      "color": null,
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
+    },
+    "n_b4236e75982a5808": {
+      "id": "n_b4236e75982a5808",
       "title": "It is a graph, not a tree",
       "summary": "Draw a second line whenever something gains a new meaning.",
       "content": [
         {
-          "id": "b_0d9984c5f687ec94",
+          "id": "b_c64b1e870ad737e5",
           "type": "markdown",
           "value": "Nothing has to move to gain a new association. Add the edge and keep both.",
-          "label": ""
+          "label": "",
+          "meta": {}
         }
       ],
       "tags": [],
@@ -187,120 +221,131 @@
       "y": -110,
       "fields": {},
       "color": null,
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     }
   },
   "edges": {
-    "e_dfcded006c5ca73f": {
-      "id": "e_dfcded006c5ca73f",
-      "from": "n_7f990d6829e0ab73",
-      "to": "n_f6ecba70e813c709",
+    "e_78d1face9504c291": {
+      "id": "e_78d1face9504c291",
+      "from": "n_f4ee23f1020cc75b",
+      "to": "n_789bb96aed3bf47f",
       "type": "child",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "e_4bc2315e74933b2e": {
-      "id": "e_4bc2315e74933b2e",
-      "from": "n_7f990d6829e0ab73",
-      "to": "n_3b3cabf0e2215023",
+    "e_39df2d1538c9f1a1": {
+      "id": "e_39df2d1538c9f1a1",
+      "from": "n_f4ee23f1020cc75b",
+      "to": "n_6812cad35972814f",
       "type": "child",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "e_895f64df7d6ffd76": {
-      "id": "e_895f64df7d6ffd76",
-      "from": "n_7f990d6829e0ab73",
-      "to": "n_1836c17b2069236b",
+    "e_10160e5675fec930": {
+      "id": "e_10160e5675fec930",
+      "from": "n_f4ee23f1020cc75b",
+      "to": "n_d175d74cb33631b8",
       "type": "child",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "e_db513b92d21ddc92": {
-      "id": "e_db513b92d21ddc92",
-      "from": "n_7f990d6829e0ab73",
-      "to": "n_e8c4239fd62fad68",
+    "e_4de8af06e9e51d96": {
+      "id": "e_4de8af06e9e51d96",
+      "from": "n_f4ee23f1020cc75b",
+      "to": "n_b4236e75982a5808",
       "type": "child",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "e_6c0395fffcfe99c9": {
-      "id": "e_6c0395fffcfe99c9",
-      "from": "n_3b3cabf0e2215023",
-      "to": "n_94bb49b6cfce967a",
+    "e_dc28c5825b2aea29": {
+      "id": "e_dc28c5825b2aea29",
+      "from": "n_6812cad35972814f",
+      "to": "n_19680d46611c2f14",
       "type": "child",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "e_334eff6984cf0bc0": {
-      "id": "e_334eff6984cf0bc0",
-      "from": "n_3b3cabf0e2215023",
-      "to": "n_9583b48bd13a4fee",
+    "e_8f6a9c37221668a9": {
+      "id": "e_8f6a9c37221668a9",
+      "from": "n_6812cad35972814f",
+      "to": "n_61b4960e7e5774cc",
       "type": "child",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "e_c5baf5076c19df9f": {
-      "id": "e_c5baf5076c19df9f",
-      "from": "n_1836c17b2069236b",
-      "to": "n_92d170e7ee1ae67a",
+    "e_c134203781928692": {
+      "id": "e_c134203781928692",
+      "from": "n_d175d74cb33631b8",
+      "to": "n_fe0bcecdd5aefab4",
       "type": "child",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "e_acd553ec4d1ab30e": {
-      "id": "e_acd553ec4d1ab30e",
-      "from": "n_f6ecba70e813c709",
-      "to": "n_a3eb6baacbd263d1",
+    "e_18c482a45dddcf6e": {
+      "id": "e_18c482a45dddcf6e",
+      "from": "n_d175d74cb33631b8",
+      "to": "n_2b2e0e3fe96a1686",
       "type": "child",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "e_219e0e6ae3b6598f": {
-      "id": "e_219e0e6ae3b6598f",
-      "from": "n_e8c4239fd62fad68",
-      "to": "n_3b3cabf0e2215023",
+    "e_d64856665bd0a4ab": {
+      "id": "e_d64856665bd0a4ab",
+      "from": "n_789bb96aed3bf47f",
+      "to": "n_3ed4a4642f1cad74",
+      "type": "child",
+      "label": "",
+      "tags": [],
+      "fields": {},
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
+    },
+    "e_133903348f4b5485": {
+      "id": "e_133903348f4b5485",
+      "from": "n_b4236e75982a5808",
+      "to": "n_6812cad35972814f",
       "type": "relates",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     },
-    "e_133e595305c3cf1f": {
-      "id": "e_133e595305c3cf1f",
-      "from": "n_92d170e7ee1ae67a",
-      "to": "n_3b3cabf0e2215023",
+    "e_65789d95a9ac6402": {
+      "id": "e_65789d95a9ac6402",
+      "from": "n_fe0bcecdd5aefab4",
+      "to": "n_6812cad35972814f",
       "type": "references",
       "label": "",
       "tags": [],
       "fields": {},
-      "created": "2026-09-16T00:45:05.211Z",
-      "updated": "2026-09-16T00:45:05.211Z"
+      "created": "2026-09-16T02:15:00.122Z",
+      "updated": "2026-09-16T02:15:00.122Z"
     }
   },
   "tagTypes": {
@@ -365,6 +410,13 @@
       "order": 2
     }
   },
+  "roots": {
+    "sync": {
+      "id": "sync",
+      "label": "Cloud drive",
+      "hint": "The folder you sync between machines — Dropbox, OneDrive, Drive, Syncthing."
+    }
+  },
   "views": [
     {
       "id": "v_open",
@@ -396,7 +448,7 @@
     }
   ],
   "meta": {
-    "created": "2026-09-16T00:45:05.205Z",
-    "updated": "2026-09-16T00:45:05.205Z"
+    "created": "2026-09-16T02:15:00.116Z",
+    "updated": "2026-09-16T02:15:00.116Z"
   }
 }

@@ -279,6 +279,176 @@ define('edgeType.update', 'Edit edge type', (store, { id, patch }) => {
 });
 
 /* ------------------------------------------------------------------ *
+ * Named roots and file locators
+ *
+ * See core/locators.js for why a file reference is a list rather than a
+ * string. These commands manage that list; resolving it is the UI's job.
+ * ------------------------------------------------------------------ */
+
+define('root.create', 'Add root', (store, { label, hint = '' }) => {
+  const id = slug(label) || uid('root');
+  store.update('Add root', (doc) => {
+    if (doc.roots[id]) return false;
+    doc.roots[id] = { id, label, hint };
+    return true;
+  });
+  return id;
+});
+
+define('root.update', 'Edit root', (store, { id, patch }) => {
+  store.update('Edit root', (doc) => {
+    if (!doc.roots[id]) return false;
+    Object.assign(doc.roots[id], patch);
+    return true;
+  });
+});
+
+define('root.delete', 'Remove root', (store, { id }) => {
+  store.update('Remove root', (doc) => {
+    delete doc.roots[id];
+    // References to a deleted root would resolve to nothing forever, so they
+    // are rewritten to plain relative paths the user can re-home.
+    for (const node of Object.values(doc.nodes)) {
+      for (const block of node.content ?? []) {
+        if (block.type !== 'file') continue;
+        if (block.meta?.root === id) block.meta.root = 'absolute';
+        if (block.meta?.alternates) {
+          for (const alternate of block.meta.alternates) {
+            if (alternate.root === id) alternate.root = 'absolute';
+          }
+        }
+      }
+    }
+  });
+});
+
+/** Attach another place the same file can be found. */
+define('locator.add', 'Add file location', (store, { nodeId, blockId, locator }) => {
+  store.update('Add file location', (doc) => {
+    const block = doc.nodes[nodeId]?.content.find((b) => b.id === blockId);
+    if (!block) return false;
+    block.meta = block.meta ?? {};
+    // The first location recorded becomes the primary, so adding one to an
+    // empty block does the obvious thing rather than creating a blank primary.
+    if (!block.value) {
+      block.value = locator.path;
+      block.meta.root = locator.root;
+      block.meta.device = locator.device ?? null;
+      block.meta.deviceName = locator.deviceName ?? null;
+      return true;
+    }
+    block.meta.alternates = block.meta.alternates ?? [];
+    const duplicate = block.meta.alternates.some(
+      (a) => a.root === locator.root && a.path === locator.path,
+    ) || (block.meta.root === locator.root && block.value === locator.path);
+    if (duplicate) return false;
+    block.meta.alternates.push({ ...locator });
+    touch(doc.nodes[nodeId]);
+    return true;
+  });
+});
+
+define('locator.remove', 'Remove file location', (store, { nodeId, blockId, index }) => {
+  store.update('Remove file location', (doc) => {
+    const block = doc.nodes[nodeId]?.content.find((b) => b.id === blockId);
+    if (!block) return false;
+    if (index === 0) {
+      // Removing the primary promotes the first alternate into its place.
+      const next = (block.meta?.alternates ?? []).shift();
+      block.value = next?.path ?? '';
+      block.meta.root = next?.root ?? 'absolute';
+      block.meta.device = next?.device ?? null;
+      block.meta.deviceName = next?.deviceName ?? null;
+      return true;
+    }
+    block.meta.alternates.splice(index - 1, 1);
+    touch(doc.nodes[nodeId]);
+    return true;
+  });
+});
+
+define('locator.promote', 'Make primary location', (store, { nodeId, blockId, index }) => {
+  store.update('Make primary location', (doc) => {
+    const block = doc.nodes[nodeId]?.content.find((b) => b.id === blockId);
+    if (!block || index < 1) return false;
+    const alternates = block.meta.alternates ?? [];
+    const [chosen] = alternates.splice(index - 1, 1);
+    if (!chosen) return false;
+    alternates.unshift({
+      root: block.meta.root ?? 'absolute',
+      path: block.value,
+      device: block.meta.device ?? null,
+      deviceName: block.meta.deviceName ?? null,
+    });
+    block.value = chosen.path;
+    block.meta.root = chosen.root;
+    block.meta.device = chosen.device ?? null;
+    block.meta.deviceName = chosen.deviceName ?? null;
+    touch(doc.nodes[nodeId]);
+    return true;
+  });
+});
+
+/**
+ * Create one node per file, all hanging off a parent node.
+ *
+ * This is the "sits on top of my filesystem" move: point it at a folder and
+ * the folder becomes a neighbourhood of the map that you can then link to
+ * anything else. Re-running it over the same parent skips files already
+ * referenced there, so it reconciles rather than duplicating.
+ */
+define('node.importFiles', 'Import files', (store, { parentId, entries, position }) => {
+  const created = [];
+  store.update('Import files', (doc) => {
+    const parent = doc.nodes[parentId];
+    const originX = position?.x ?? parent?.x ?? 0;
+    const originY = position?.y ?? parent?.y ?? 0;
+
+    const existing = new Set();
+    if (parent) {
+      for (const edge of Object.values(doc.edges)) {
+        if (edge.from !== parentId) continue;
+        for (const block of doc.nodes[edge.to]?.content ?? []) {
+          if (block.type === 'file' && block.value) existing.add(block.value);
+        }
+      }
+    }
+
+    let placed = 0;
+    for (const entry of entries) {
+      if (existing.has(entry.locator.path)) continue;
+      const node = createNode({
+        title: entry.title,
+        x: originX + 260 + (placed % 3) * 215,
+        y: originY - 120 + Math.floor(placed / 3) * 110,
+        tags: entry.tags ?? [],
+        fields: entry.fields ?? {},
+        content: [{
+          type: 'file',
+          label: entry.title,
+          value: entry.locator.path,
+          meta: {
+            root: entry.locator.root,
+            device: entry.locator.device ?? null,
+            deviceName: entry.locator.deviceName ?? null,
+          },
+        }],
+      });
+      doc.nodes[node.id] = node;
+      created.push(node.id);
+      placed += 1;
+
+      if (parent) {
+        const edge = createEdge({ from: parentId, to: node.id, type: 'child' });
+        doc.edges[edge.id] = edge;
+      }
+    }
+    return created.length > 0;
+  });
+  return created;
+});
+
+/* ------------------------------------------------------------------ *
  * Saved views
  * ------------------------------------------------------------------ */
 

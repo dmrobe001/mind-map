@@ -11,7 +11,7 @@ import '../src/content/renderers.js'; // registers the content block types
 import { App } from './ui/app.js';
 
 const app = new App(document.body);
-app.start();
+await app.start();
 
 // Exposed for tinkering from the console — this is a tool you are expected to
 // take apart.

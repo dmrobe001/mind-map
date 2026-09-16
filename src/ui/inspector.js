@@ -10,6 +10,7 @@
 import { runCommand } from '../core/commands.js';
 import { contentRenderers } from '../core/registry.js';
 import { rendererFor } from '../content/renderers.js';
+import { locatorsFor, resolveLocator, bestLocatorForPath, ABSOLUTE } from '../core/locators.js';
 import { h } from './filterpanel.js';
 
 const section = (title, ...children) => h('section', { class: 'panel-section' }, [
@@ -18,13 +19,26 @@ const section = (title, ...children) => h('section', { class: 'panel-section' },
 ]);
 
 export class Inspector extends EventTarget {
-  constructor({ root, store, view }) {
+  constructor({ root, store, view, platform, fileIndex }) {
     super();
     this.root = root;
     this.store = store;
     this.view = view;
+    this.platform = platform;
+    this.fileIndex = fileIndex;
     /** Block ids currently open in source mode rather than preview. */
     this.editing = new Set();
+  }
+
+  /** Everything a content renderer needs to resolve a file reference. */
+  get renderContext() {
+    return {
+      doc: this.store.doc,
+      platform: this.platform,
+      deviceRoots: this.platform?.settings?.roots ?? {},
+      separator: this.platform?.device?.separator ?? '/',
+      exists: this.fileIndex ? this.fileIndex.lookup : () => null,
+    };
   }
 
   render() {
@@ -298,7 +312,9 @@ export class Inspector extends EventTarget {
     ]);
 
     let body;
-    if (isEditing) {
+    if (isEditing && renderer.editor === 'locators') {
+      body = this.renderLocatorEditor(node, block);
+    } else if (isEditing) {
       const commit = (event) => runCommand('block.update', this.store, {
         nodeId: node.id,
         blockId: block.id,
@@ -323,7 +339,7 @@ export class Inspector extends EventTarget {
           oninput: commit,
         }, [document.createTextNode(block.value ?? '')]);
     } else {
-      body = renderer.render(block, { doc: this.store.doc });
+      body = renderer.render(block, this.renderContext);
       body.addEventListener('click', (event) => {
         const link = event.target.closest('.wikilink');
         if (!link) return;
@@ -337,6 +353,156 @@ export class Inspector extends EventTarget {
     const children = [head, body];
     if (isEditing && renderer.hint) children.push(h('p', { class: 'hint', text: renderer.hint }));
     return h('div', { class: 'block' }, children);
+  }
+
+  /**
+   * The editor for a file reference: one row per place the file lives.
+   *
+   * The "pick" button is the path worth optimising, because it is the only one
+   * that produces a portable locator without the user thinking about it — the
+   * absolute path from the dialog is rewritten relative to the deepest
+   * configured root that contains it.
+   */
+  renderLocatorEditor(node, block) {
+    const doc = this.store.doc;
+    const context = this.renderContext;
+    const locators = locatorsFor(block);
+
+    const rootOptions = (selected) => {
+      const known = doc.roots ?? {};
+      return [
+        h('option', { value: ABSOLUTE, text: 'absolute path', selected: selected === ABSOLUTE }),
+        ...Object.values(known).map((root) => h('option', {
+          value: root.id, text: root.label, selected: root.id === selected,
+        })),
+        // A locator can name a root this map no longer declares — after a
+        // root was deleted, or a map was edited by hand. Keep the value
+        // selectable so the select shows the truth and merely touching it
+        // cannot silently rewrite the reference.
+        selected !== ABSOLUTE && !known[selected]
+          ? h('option', { value: selected, text: `${selected} (not in this map)`, selected: true })
+          : null,
+      ].filter(Boolean);
+    };
+
+    const updatePrimary = (changes) => runCommand('block.update', this.store, {
+      nodeId: node.id,
+      blockId: block.id,
+      patch: changes,
+      coalesceKey: `locator:${block.id}`,
+    });
+
+    const updateAlternate = (index, changes) => runCommand('block.update', this.store, {
+      nodeId: node.id,
+      blockId: block.id,
+      patch: {
+        meta: {
+          ...block.meta,
+          alternates: block.meta.alternates.map(
+            (alternate, i) => (i === index ? { ...alternate, ...changes } : alternate),
+          ),
+        },
+      },
+      coalesceKey: `locator:${block.id}:${index}`,
+    });
+
+    const rows = locators.map((locator, index) => {
+      const resolved = resolveLocator(locator, context);
+      const present = resolved ? (context.exists(resolved) ?? null) : null;
+      const isPrimary = index === 0;
+
+      const apply = (changes) => (isPrimary
+        ? updatePrimary({
+          ...(changes.path !== undefined ? { value: changes.path } : {}),
+          ...(changes.root !== undefined
+            ? { meta: { ...block.meta, root: changes.root } }
+            : {}),
+        })
+        : updateAlternate(index - 1, changes));
+
+      const dot = h('span', { class: 'locator-dot' });
+      dot.dataset.state = present === true ? 'here' : present === false ? 'elsewhere' : 'unknown';
+
+      return h('div', { class: `locator-edit ${isPrimary ? 'is-primary' : ''}` }, [
+        h('div', { class: 'locator-edit-head' }, [
+          dot,
+          h('select', {
+            class: 'mini-select',
+            onchange: (event) => apply({ root: event.target.value }),
+          }, rootOptions(locator.root)),
+          locator.deviceName
+            ? h('span', { class: 'locator-device', text: locator.deviceName })
+            : null,
+          isPrimary
+            ? h('span', { class: 'locator-badge', text: 'primary' })
+            : h('button', {
+              type: 'button', class: 'mini', text: '↑', title: 'Make this the primary location',
+              onclick: () => runCommand('locator.promote', this.store, {
+                nodeId: node.id, blockId: block.id, index,
+              }),
+            }),
+          h('button', {
+            type: 'button', class: 'mini danger', text: '×', title: 'Remove this location',
+            onclick: () => runCommand('locator.remove', this.store, {
+              nodeId: node.id, blockId: block.id, index,
+            }),
+          }),
+        ]),
+        h('input', {
+          class: 'block-input',
+          type: 'text',
+          value: locator.path,
+          placeholder: locator.root === ABSOLUTE ? '/absolute/path/to/file' : 'path/inside/the/root',
+          'data-focus-key': `locator-${block.id}-${index}`,
+          oninput: (event) => apply({ path: event.target.value }),
+        }),
+        resolved && locator.root !== ABSOLUTE
+          ? h('p', { class: 'hint mono', text: `→ ${resolved}` })
+          : null,
+        !resolved && locator.root !== ABSOLUTE
+          ? h('p', {
+            class: 'hint',
+            text: `This machine has no path for the "${doc.roots?.[locator.root]?.label ?? locator.root}" root.`,
+          })
+          : null,
+      ]);
+    });
+
+    const actions = h('div', { class: 'button-row wrap' }, [
+      this.platform?.can.browseDirectories || this.platform?.can.realPaths
+        ? h('button', {
+          type: 'button',
+          class: 'mini',
+          text: 'pick a file…',
+          onclick: async () => {
+            const picked = await this.platform.pickFiles();
+            for (const path of picked) {
+              runCommand('locator.add', this.store, {
+                nodeId: node.id,
+                blockId: block.id,
+                locator: bestLocatorForPath(path, {
+                  deviceRoots: context.deviceRoots,
+                  device: this.platform.device,
+                }),
+              });
+            }
+          },
+        })
+        : null,
+      h('button', {
+        type: 'button',
+        class: 'mini',
+        text: '+ another location',
+        title: 'Record another place this same file lives',
+        onclick: () => runCommand('locator.add', this.store, {
+          nodeId: node.id,
+          blockId: block.id,
+          locator: { root: ABSOLUTE, path: '', device: null, deviceName: null },
+        }),
+      }),
+    ]);
+
+    return h('div', { class: 'locator-editor' }, [...rows, actions]);
   }
 
   renderFields(node) {
